@@ -7,5 +7,5 @@ namespace Application.Features.LeaveTypes.Requests.Commands;
 
 public class CreateLeaveTypeCommand: IRequest<int>
 {
-    public LeaveTypeDto LeaveTypeDto { get; set; } = default!;
+    public CreateLeaveTypeDto LeaveTypeDto { get; set; } = default!;
 }
