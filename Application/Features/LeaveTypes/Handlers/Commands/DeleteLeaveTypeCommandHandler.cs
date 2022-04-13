@@ -5,12 +5,15 @@ using MediatR;
 using AutoMapper;
 
 using Domain;
+using Application.DTOs.LeaveType;
 using Application.Features.LeaveTypes.Requests.Commands;
+using Application.Exceptions;
+using Application.Responses;
 using Persistence.Contracts;
 
 namespace Application.Features.LeaveTypes.Handlers.Commands;
 
-public class DeleteLeaveTypeCommandHandler : IRequestHandler<DeleteLeaveTypeCommand>
+public class DeleteLeaveTypeCommandHandler : IRequestHandler<DeleteLeaveTypeCommand, ResultResponse<LeaveTypeDto>>
 {
     private readonly ILeaveTypeRepository _leaveTypeRepository;
     private readonly IMapper _mapper;
@@ -21,12 +24,28 @@ public class DeleteLeaveTypeCommandHandler : IRequestHandler<DeleteLeaveTypeComm
         _mapper = mapper;
     }
 
-    public async Task<Unit> Handle(DeleteLeaveTypeCommand request, CancellationToken cancellationToken)
+    public async Task<ResultResponse<LeaveTypeDto>> Handle(DeleteLeaveTypeCommand request, CancellationToken cancellationToken)
     {
-        var leaveType = await _leaveTypeRepository.GetAsync(request.Id);
+        var result = new ResultResponse<LeaveTypeDto>();
 
-        await _leaveTypeRepository.DeleteAsync(leaveType);
+        try
+        {
+            var leaveType = await _leaveTypeRepository.GetAsync(request.Id);
 
-        return Unit.Value;
+            if(leaveType == null)
+                throw new NotFoundException(nameof(LeaveType), request.Id);
+
+            leaveType = await _leaveTypeRepository.DeleteAsync(leaveType);
+
+            var leaveTypeDto = _mapper.Map<LeaveTypeDto>(leaveType);
+
+            result = ResultResponse<LeaveTypeDto>.Success(leaveTypeDto, $"Deletion of {nameof(LeaveType)} is successful");
+        }
+        catch (Exception ex)
+        {
+            result = ResultResponse<LeaveTypeDto>.Failure(new List<string>(){ ex.Message }, $"Deletion of {nameof(LeaveType)} is failed");
+        }
+
+        return result;
     }
 }
