@@ -1,17 +1,21 @@
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using MediatR;
 using AutoMapper;
 
 using Domain;
+using Application.DTOs.LeaveType;
 using Application.DTOs.LeaveType.Validators;
 using Application.Features.LeaveTypes.Requests.Commands;
+using Application.Exceptions;
+using Application.Responses;
 using Persistence.Contracts;
 
 namespace Application.Features.LeaveTypes.Handlers.Commands;
 
-public class CreateLeaveTypeCommandHandler: IRequestHandler<CreateLeaveTypeCommand, int>
+public class CreateLeaveTypeCommandHandler: IRequestHandler<CreateLeaveTypeCommand, ResultResponse<LeaveTypeDto>>
 {
     private readonly ILeaveTypeRepository _leaveTypeRepository;
     private readonly IMapper _mapper;
@@ -22,18 +26,35 @@ public class CreateLeaveTypeCommandHandler: IRequestHandler<CreateLeaveTypeComma
         _mapper = mapper;
     }
 
-    public async Task<int> Handle(CreateLeaveTypeCommand request, CancellationToken cancellationToken)
+    public async Task<ResultResponse<LeaveTypeDto>> Handle(CreateLeaveTypeCommand request, CancellationToken cancellationToken)
     {
-        var validator = new CreateLeaveTypeDtoValidator();
-        var validationResult = await validator.ValidateAsync(request.LeaveTypeDto);
+        var result = new ResultResponse<LeaveTypeDto>();
 
-        if(!validationResult.IsValid)
-            throw new Exception();
-            
-        var leaveType = _mapper.Map<LeaveType>(request.LeaveTypeDto);
+        try
+        {
+            var validator = new CreateLeaveTypeDtoValidator();
+            var validationResult = await validator.ValidateAsync(request.LeaveTypeDto);
 
-        leaveType = await _leaveTypeRepository.AddAsync(leaveType);
+            if(!validationResult.IsValid)
+                throw new ValidationException(validationResult);
+                
+            var leaveType = _mapper.Map<LeaveType>(request.LeaveTypeDto);
 
-        return leaveType.Id;
+            leaveType = await _leaveTypeRepository.AddAsync(leaveType);
+
+            var leaveTypeDto = _mapper.Map<LeaveTypeDto>(leaveType);
+
+            result = ResultResponse<LeaveTypeDto>.Success(leaveTypeDto, $"Creation of {nameof(LeaveType)} is successful");
+        }
+        catch(ValidationException ex)
+        {
+            result = ResultResponse<LeaveTypeDto>.Failure(ex.Errors, $"Creation of {nameof(LeaveType)} is failed");
+        }
+        catch (Exception ex)
+        {
+            result = ResultResponse<LeaveTypeDto>.Failure(new List<string>() {ex.Message}, $"Creation of {nameof(LeaveType)} is failed");
+        }
+
+        return result;
     }
 }

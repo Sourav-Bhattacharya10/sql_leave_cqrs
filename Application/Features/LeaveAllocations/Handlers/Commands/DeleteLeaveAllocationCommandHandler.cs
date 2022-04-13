@@ -5,12 +5,15 @@ using MediatR;
 using AutoMapper;
 
 using Domain;
+using Application.DTOs.LeaveAllocation;
 using Application.Features.LeaveAllocations.Requests.Commands;
+using Application.Exceptions;
+using Application.Responses;
 using Persistence.Contracts;
 
 namespace Application.Features.LeaveAllocations.Handlers.Commands;
 
-public class DeleteLeaveAllocationCommandHandler : IRequestHandler<DeleteLeaveAllocationCommand>
+public class DeleteLeaveAllocationCommandHandler : IRequestHandler<DeleteLeaveAllocationCommand, ResultResponse<LeaveAllocationDto>>
 {
     private readonly ILeaveAllocationRepository _leaveAllocationRepository;
     private readonly IMapper _mapper;
@@ -21,12 +24,28 @@ public class DeleteLeaveAllocationCommandHandler : IRequestHandler<DeleteLeaveAl
         _mapper = mapper;
     }
 
-    public async Task<Unit> Handle(DeleteLeaveAllocationCommand request, CancellationToken cancellationToken)
+    public async Task<ResultResponse<LeaveAllocationDto>> Handle(DeleteLeaveAllocationCommand request, CancellationToken cancellationToken)
     {
-        var leaveAllocation = await _leaveAllocationRepository.GetAsync(request.Id);
+        var result = new ResultResponse<LeaveAllocationDto>();
 
-        await _leaveAllocationRepository.DeleteAsync(leaveAllocation);
+        try
+        {
+            var leaveAllocation = await _leaveAllocationRepository.GetAsync(request.Id);
 
-        return Unit.Value;
+            if(leaveAllocation == null)
+                throw new NotFoundException(nameof(LeaveAllocation), request.Id);
+
+            leaveAllocation = await _leaveAllocationRepository.DeleteAsync(leaveAllocation);
+
+            var leaveAllocationDto = _mapper.Map<LeaveAllocationDto>(leaveAllocation);
+
+            result = ResultResponse<LeaveAllocationDto>.Success(leaveAllocationDto, $"Deletion of {nameof(LeaveAllocation)} is successful");
+        }
+        catch (Exception ex)
+        {
+            result = ResultResponse<LeaveAllocationDto>.Failure(new List<string>() {ex.Message}, $"Deletion of {nameof(LeaveAllocation)} is failed");
+        }
+
+        return result;
     }
 }

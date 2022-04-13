@@ -8,5 +8,5 @@ public interface ILeaveRequestRepository : IGenericRepository<LeaveRequest>
 {
     Task<LeaveRequest> GetLeaveRequestWithDetailsAsync(int id);
     Task<IReadOnlyList<LeaveRequest>> GetLeaveRequestsWithDetailsAsync();
-    Task ChangeApprovalStatusAsync(LeaveRequest leaveRequest, bool? ApprovalStatus);
+    Task<LeaveRequest> ChangeApprovalStatusAsync(LeaveRequest leaveRequest, bool? ApprovalStatus);
 }

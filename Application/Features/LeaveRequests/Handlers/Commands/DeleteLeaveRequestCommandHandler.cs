@@ -5,12 +5,15 @@ using MediatR;
 using AutoMapper;
 
 using Domain;
+using Application.DTOs.LeaveRequest;
 using Application.Features.LeaveRequests.Requests.Commands;
+using Application.Exceptions;
+using Application.Responses;
 using Persistence.Contracts;
 
 namespace Application.Features.LeaveRequests.Handlers.Commands;
 
-public class DeleteLeaveRequestCommandHandler : IRequestHandler<DeleteLeaveRequestCommand>
+public class DeleteLeaveRequestCommandHandler : IRequestHandler<DeleteLeaveRequestCommand, ResultResponse<LeaveRequestDto>>
 {
     private readonly ILeaveRequestRepository _leaveRequestRepository;
     private readonly IMapper _mapper;
@@ -21,12 +24,28 @@ public class DeleteLeaveRequestCommandHandler : IRequestHandler<DeleteLeaveReque
         _mapper = mapper;
     }
 
-    public async Task<Unit> Handle(DeleteLeaveRequestCommand request, CancellationToken cancellationToken)
+    public async Task<ResultResponse<LeaveRequestDto>> Handle(DeleteLeaveRequestCommand request, CancellationToken cancellationToken)
     {
-        var leaveRequest = await _leaveRequestRepository.GetAsync(request.Id);
+        var result = new ResultResponse<LeaveRequestDto>();
 
-        await _leaveRequestRepository.DeleteAsync(leaveRequest);
+        try
+        {
+            var leaveRequest = await _leaveRequestRepository.GetAsync(request.Id);
 
-        return Unit.Value;
+            if(leaveRequest == null)
+                throw new NotFoundException(nameof(LeaveRequest), request.Id);
+
+            leaveRequest = await _leaveRequestRepository.DeleteAsync(leaveRequest);
+
+            var leaveRequestDto = _mapper.Map<LeaveRequestDto>(leaveRequest);
+
+            result = ResultResponse<LeaveRequestDto>.Success(leaveRequestDto, $"Deletion of {nameof(LeaveRequest)} is successful");
+        }
+        catch (Exception ex)
+        {
+            result = ResultResponse<LeaveRequestDto>.Failure(new List<string>(){ ex.Message }, $"Deletion of {nameof(LeaveRequest)} is failed");
+        }
+
+        return result;
     }
 }
