@@ -11,6 +11,8 @@ using Application.Features.LeaveRequests.Requests.Commands;
 using Application.Exceptions;
 using Application.Responses;
 using Persistence.Contracts;
+using Infrastructure.Models;
+using Infrastructure.Contracts.EmailContract;
 
 namespace Application.Features.LeaveRequests.Handlers.Commands;
 
@@ -19,12 +21,14 @@ public class CreateLeaveRequestCommandHandler : IRequestHandler<CreateLeaveReque
     private readonly ILeaveRequestRepository _leaveRequestRepository;
     private readonly IMapper _mapper;
     private readonly ILeaveTypeRepository _leaveTypeRepository;
+    private readonly IEmailSender _emailSender;
 
-    public CreateLeaveRequestCommandHandler(ILeaveRequestRepository leaveRequestRepository, IMapper mapper, ILeaveTypeRepository leaveTypeRepository)
+    public CreateLeaveRequestCommandHandler(ILeaveRequestRepository leaveRequestRepository, IMapper mapper, ILeaveTypeRepository leaveTypeRepository, IEmailSender emailSender)
     {
         _leaveRequestRepository = leaveRequestRepository;
         _mapper = mapper;
         _leaveTypeRepository = leaveTypeRepository;
+        _emailSender = emailSender;
     }
 
     public async Task<ResultResponse<LeaveRequestDto>> Handle(CreateLeaveRequestCommand request, CancellationToken cancellationToken)
@@ -46,6 +50,14 @@ public class CreateLeaveRequestCommandHandler : IRequestHandler<CreateLeaveReque
             var leaveRequestDto = _mapper.Map<LeaveRequestDto>(leaveRequest);
 
             result = ResultResponse<LeaveRequestDto>.Success(leaveRequestDto, $"Creation of {nameof(LeaveRequest)} is successful");
+
+            var email = new Email {
+                To = "sourav.bhattacharya3@gmail.com",
+                Subject = "Leave Request Created",
+                Body = $"Your leave request for {leaveRequestDto.StartDate} to {leaveRequestDto.EndDate} has been created successfully."
+            };
+
+            await _emailSender.SendEmailAsync(email);
         }
         catch (ValidationException ex)
         {
