@@ -11,6 +11,7 @@ using Application.Features.LeaveAllocations.Requests.Commands;
 using Application.Exceptions;
 using Application.Responses;
 using Persistence.Contracts;
+using Application.Enums;
 
 namespace Application.Features.LeaveAllocations.Handlers.Commands;
 
@@ -50,15 +51,19 @@ public class UpdateLeaveAllocationCommandHandler : IRequestHandler<UpdateLeaveAl
 
             var leaveAllocationDto = _mapper.Map<LeaveAllocationDto>(leaveAllocation);
 
-            result = ResultResponse<LeaveAllocationDto>.Success(leaveAllocationDto, $"Updation of {nameof(LeaveAllocation)} is successful");
+            result = ResultResponse<LeaveAllocationDto>.Success(leaveAllocationDto, $"Updation of {nameof(LeaveAllocation)} successful");
         }
         catch (ValidationException ex)
         {
-            result = ResultResponse<LeaveAllocationDto>.Failure(ex.Errors, $"Updation of {nameof(LeaveAllocation)} is failed");
+            result = ResultResponse<LeaveAllocationDto>.Failure(ex.Errors, $"Validation of {nameof(LeaveAllocation)} updation failed", ErrorType.Validation);
+        }
+        catch (NotFoundException ex)
+        {
+            result = ResultResponse<LeaveAllocationDto>.Failure(new List<string>() {ex.Message}, $"Updation of {nameof(LeaveAllocation)} failed as the record was not found", ErrorType.NotFound);
         }
         catch (Exception ex)
         {
-            result = ResultResponse<LeaveAllocationDto>.Failure(new List<string>() {ex.Message}, $"Updation of {nameof(LeaveAllocation)} is failed");
+            result = ResultResponse<LeaveAllocationDto>.Failure(new List<string>() {ex.Message}, $"Updation of {nameof(LeaveAllocation)} is failed", ErrorType.Database, ex);
         }
 
         return result;

@@ -10,6 +10,7 @@ using Application.Features.LeaveRequests.Requests.Commands;
 using Application.Exceptions;
 using Application.Responses;
 using Persistence.Contracts;
+using Application.Enums;
 
 namespace Application.Features.LeaveRequests.Handlers.Commands;
 
@@ -39,11 +40,15 @@ public class DeleteLeaveRequestCommandHandler : IRequestHandler<DeleteLeaveReque
 
             var leaveRequestDto = _mapper.Map<LeaveRequestDto>(leaveRequest);
 
-            result = ResultResponse<LeaveRequestDto>.Success(leaveRequestDto, $"Deletion of {nameof(LeaveRequest)} is successful");
+            result = ResultResponse<LeaveRequestDto>.Success(leaveRequestDto, $"Deletion of {nameof(LeaveRequest)} successful");
+        }
+        catch (NotFoundException ex)
+        {
+            result = ResultResponse<LeaveRequestDto>.Failure(new List<string>(){ ex.Message }, $"Deletion of {nameof(LeaveRequest)} failed as the record was not found", ErrorType.NotFound);
         }
         catch (Exception ex)
         {
-            result = ResultResponse<LeaveRequestDto>.Failure(new List<string>(){ ex.Message }, $"Deletion of {nameof(LeaveRequest)} is failed");
+            result = ResultResponse<LeaveRequestDto>.Failure(new List<string>(){ ex.Message }, $"Deletion of {nameof(LeaveRequest)} failed", ErrorType.Database, ex);
         }
 
         return result;

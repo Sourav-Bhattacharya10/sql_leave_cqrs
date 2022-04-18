@@ -1,6 +1,17 @@
+using Microsoft.Extensions.Configuration;
+
+using Application;
+using Persistence;
+using Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
+IConfiguration configuration = builder.Configuration;
+
 // Add services to the container.
+builder.Services.ConfigureApplicationServices();
+builder.Services.ConfigurePersistenceServices(configuration);
+builder.Services.ConfigureInfrastructureServices(configuration);
 
 builder.Services.AddControllers();
 // .AddFluentValidation(config => 
@@ -14,6 +25,15 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("CorsPolicy", policyBuilder => policyBuilder.AllowAnyOrigin()
+                                                                  .AllowAnyMethod()
+                                                                  .AllowAnyHeader());
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -24,6 +44,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("CorsPolicy");
 
 app.UseAuthorization();
 

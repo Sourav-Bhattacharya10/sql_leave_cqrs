@@ -10,6 +10,7 @@ using Application.Features.LeaveAllocations.Requests.Commands;
 using Application.Exceptions;
 using Application.Responses;
 using Persistence.Contracts;
+using Application.Enums;
 
 namespace Application.Features.LeaveAllocations.Handlers.Commands;
 
@@ -39,11 +40,15 @@ public class DeleteLeaveAllocationCommandHandler : IRequestHandler<DeleteLeaveAl
 
             var leaveAllocationDto = _mapper.Map<LeaveAllocationDto>(leaveAllocation);
 
-            result = ResultResponse<LeaveAllocationDto>.Success(leaveAllocationDto, $"Deletion of {nameof(LeaveAllocation)} is successful");
+            result = ResultResponse<LeaveAllocationDto>.Success(leaveAllocationDto, $"Deletion of {nameof(LeaveAllocation)} successful");
+        }
+        catch (NotFoundException ex)
+        {
+            result = ResultResponse<LeaveAllocationDto>.Failure(new List<string>() {ex.Message}, $"Deletion of {nameof(LeaveAllocation)} failed as the record was not found", ErrorType.NotFound);
         }
         catch (Exception ex)
         {
-            result = ResultResponse<LeaveAllocationDto>.Failure(new List<string>() {ex.Message}, $"Deletion of {nameof(LeaveAllocation)} is failed");
+            result = ResultResponse<LeaveAllocationDto>.Failure(new List<string>() {ex.Message}, $"Deletion of {nameof(LeaveAllocation)} failed", ErrorType.Database, ex);
         }
 
         return result;

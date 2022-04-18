@@ -11,6 +11,7 @@ using Application.Features.LeaveAllocations.Requests.Commands;
 using Application.Exceptions;
 using Application.Responses;
 using Persistence.Contracts;
+using Application.Enums;
 
 namespace Application.Features.LeaveAllocations.Handlers.Commands;
 
@@ -45,15 +46,15 @@ public class CreateLeaveAllocationCommandHandler: IRequestHandler<CreateLeaveAll
 
             var leaveAllocationDto = _mapper.Map<LeaveAllocationDto>(leaveAllocation);
 
-            result = ResultResponse<LeaveAllocationDto>.Success(leaveAllocationDto, $"Creation of {nameof(LeaveAllocation)} is successful");
+            result = ResultResponse<LeaveAllocationDto>.Success(leaveAllocationDto, $"Creation of {nameof(LeaveAllocation)} successful");
         }
         catch (ValidationException ex)
         {
-            result = ResultResponse<LeaveAllocationDto>.Failure(ex.Errors, $"Creation of {nameof(LeaveAllocation)} is failed");
+            result = ResultResponse<LeaveAllocationDto>.Failure(ex.Errors, $"Validation of {nameof(LeaveAllocation)} creation failed", ErrorType.Validation);
         }
         catch (Exception ex)
         {
-            result = ResultResponse<LeaveAllocationDto>.Failure(new List<string>() {ex.Message}, $"Creation of {nameof(LeaveAllocation)} is failed");
+            result = ResultResponse<LeaveAllocationDto>.Failure(new List<string>() {ex.Message}, $"Creation of {nameof(LeaveAllocation)} failed", ErrorType.Database, ex);
         }
 
         return result;
