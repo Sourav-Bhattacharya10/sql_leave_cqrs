@@ -12,6 +12,7 @@ using Application.Features.LeaveTypes.Requests.Commands;
 using Application.Exceptions;
 using Application.Responses;
 using Persistence.Contracts;
+using Application.Enums;
 
 namespace Application.Features.LeaveTypes.Handlers.Commands;
 
@@ -44,15 +45,15 @@ public class CreateLeaveTypeCommandHandler: IRequestHandler<CreateLeaveTypeComma
 
             var leaveTypeDto = _mapper.Map<LeaveTypeDto>(leaveType);
 
-            result = ResultResponse<LeaveTypeDto>.Success(leaveTypeDto, $"Creation of {nameof(LeaveType)} is successful");
+            result = ResultResponse<LeaveTypeDto>.Success(leaveTypeDto, $"Creation of {nameof(LeaveType)} successful");
         }
         catch(ValidationException ex)
         {
-            result = ResultResponse<LeaveTypeDto>.Failure(ex.Errors, $"Creation of {nameof(LeaveType)} is failed");
+            result = ResultResponse<LeaveTypeDto>.Failure(ex.Errors, $"Validation of {nameof(LeaveType)} creation failed", ErrorType.Validation);
         }
         catch (Exception ex)
         {
-            result = ResultResponse<LeaveTypeDto>.Failure(new List<string>() {ex.Message}, $"Creation of {nameof(LeaveType)} is failed");
+            result = ResultResponse<LeaveTypeDto>.Failure(new List<string>() {ex.Message}, $"Creation of {nameof(LeaveType)} failed", ErrorType.Database, ex);
         }
 
         return result;
