@@ -17,12 +17,12 @@ namespace Application.Features.LeaveAllocations.Handlers.Queries;
 
 public class GetLeaveAllocationDetailRequestHandler : IRequestHandler<GetLeaveAllocationDetailRequest, ResultResponse<LeaveAllocationDto>>
 {
-    private readonly ILeaveAllocationRepository _leaveAllocationRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public GetLeaveAllocationDetailRequestHandler(ILeaveAllocationRepository leaveAllocationRepository, IMapper mapper)
+    public GetLeaveAllocationDetailRequestHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        _leaveAllocationRepository = leaveAllocationRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
@@ -32,7 +32,7 @@ public class GetLeaveAllocationDetailRequestHandler : IRequestHandler<GetLeaveAl
 
         try
         {
-            var leaveAllocation = await _leaveAllocationRepository.GetLeaveAllocationWithDetailsAsync(request.Id);
+            var leaveAllocation = await _unitOfWork.LeaveAllocationRepository.GetLeaveAllocationWithDetailsAsync(request.Id);
 
             if(leaveAllocation == null)
                 throw new NotFoundException(nameof(LeaveAllocation), request.Id);

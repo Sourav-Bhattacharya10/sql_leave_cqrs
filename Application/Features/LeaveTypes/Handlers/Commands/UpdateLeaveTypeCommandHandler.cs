@@ -17,12 +17,12 @@ namespace Application.Features.LeaveTypes.Handlers.Commands;
 
 public class UpdateLeaveTypeCommandHandler : IRequestHandler<UpdateLeaveTypeCommand, ResultResponse<LeaveTypeDto>>
 {
-    private readonly ILeaveTypeRepository _leaveTypeRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public UpdateLeaveTypeCommandHandler(ILeaveTypeRepository leaveTypeRepository, IMapper mapper)
+    public UpdateLeaveTypeCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        _leaveTypeRepository = leaveTypeRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
@@ -38,14 +38,16 @@ public class UpdateLeaveTypeCommandHandler : IRequestHandler<UpdateLeaveTypeComm
             if(!validationResult.IsValid)
                 throw new ValidationException(validationResult);
 
-            var leaveType = await _leaveTypeRepository.GetAsync(request.LeaveTypeDto.Id);
+            var leaveType = await _unitOfWork.LeaveTypeRepository.GetAsync(request.LeaveTypeDto.Id);
 
             if(leaveType == null)
                 throw new NotFoundException(nameof(LeaveType), request.LeaveTypeDto.Id);
 
             _mapper.Map(request.LeaveTypeDto, leaveType);
 
-            leaveType =  await _leaveTypeRepository.UpdateAsync(leaveType);
+            leaveType =  _unitOfWork.LeaveTypeRepository.Update(leaveType);
+
+            await _unitOfWork.SaveChangesAsync();
 
             var leaveTypeDto = _mapper.Map<LeaveTypeDto>(leaveType);
 

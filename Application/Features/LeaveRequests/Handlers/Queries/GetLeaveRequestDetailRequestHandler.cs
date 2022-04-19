@@ -17,12 +17,12 @@ namespace Application.Features.LeaveRequests.Handlers.Queries;
 
 public class GetLeaveRequestDetailRequestHandler : IRequestHandler<GetLeaveRequestDetailRequest, ResultResponse<LeaveRequestDto>>
 {
-    private readonly ILeaveRequestRepository _leaveRequestRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public GetLeaveRequestDetailRequestHandler(ILeaveRequestRepository leaveRequestRepository, IMapper mapper)
+    public GetLeaveRequestDetailRequestHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        _leaveRequestRepository = leaveRequestRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
@@ -32,7 +32,7 @@ public class GetLeaveRequestDetailRequestHandler : IRequestHandler<GetLeaveReque
 
         try
         {
-            var leaveRequest = await _leaveRequestRepository.GetLeaveRequestWithDetailsAsync(request.Id);
+            var leaveRequest = await _unitOfWork.LeaveRequestRepository.GetLeaveRequestWithDetailsAsync(request.Id);
 
             if(leaveRequest == null)
                 throw new NotFoundException(nameof(LeaveRequest), request.Id);

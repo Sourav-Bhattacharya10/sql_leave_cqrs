@@ -16,12 +16,12 @@ namespace Application.Features.LeaveRequests.Handlers.Commands;
 
 public class DeleteLeaveRequestCommandHandler : IRequestHandler<DeleteLeaveRequestCommand, ResultResponse<LeaveRequestDto>>
 {
-    private readonly ILeaveRequestRepository _leaveRequestRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public DeleteLeaveRequestCommandHandler(ILeaveRequestRepository leaveRequestRepository, IMapper mapper)
+    public DeleteLeaveRequestCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        _leaveRequestRepository = leaveRequestRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
@@ -31,12 +31,14 @@ public class DeleteLeaveRequestCommandHandler : IRequestHandler<DeleteLeaveReque
 
         try
         {
-            var leaveRequest = await _leaveRequestRepository.GetAsync(request.Id);
+            var leaveRequest = await _unitOfWork.LeaveRequestRepository.GetAsync(request.Id);
 
             if(leaveRequest == null)
                 throw new NotFoundException(nameof(LeaveRequest), request.Id);
 
-            leaveRequest = await _leaveRequestRepository.DeleteAsync(leaveRequest);
+            leaveRequest = _unitOfWork.LeaveRequestRepository.Delete(leaveRequest);
+
+            await _unitOfWork.SaveChangesAsync();
 
             var leaveRequestDto = _mapper.Map<LeaveRequestDto>(leaveRequest);
 

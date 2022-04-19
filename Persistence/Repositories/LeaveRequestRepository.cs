@@ -35,11 +35,10 @@ public class LeaveRequestRepository : GenericRepository<LeaveRequest>, ILeaveReq
         return leaveRequests;
     }
 
-    public async Task<LeaveRequest> ChangeApprovalStatusAsync(LeaveRequest leaveRequest, bool? ApprovalStatus)
+    public LeaveRequest ChangeApprovalStatus(LeaveRequest leaveRequest, bool? ApprovalStatus)
     {
         leaveRequest.Approved = ApprovalStatus;
         _dbContext.Entry(leaveRequest).State = EntityState.Modified;
-        await _dbContext.SaveChangesAsync();
 
         return leaveRequest;
     }

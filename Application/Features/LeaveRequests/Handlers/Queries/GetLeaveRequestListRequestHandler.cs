@@ -17,12 +17,12 @@ namespace Application.Features.LeaveRequests.Handlers.Queries;
 
 public class GetLeaveRequestListRequestHandler : IRequestHandler<GetLeaveRequestListRequest, ResultResponse<List<LeaveRequestListDto>>>
 {
-    private readonly ILeaveRequestRepository _leaveRequestRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public GetLeaveRequestListRequestHandler(ILeaveRequestRepository leaveRequestRepository, IMapper mapper)
+    public GetLeaveRequestListRequestHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        _leaveRequestRepository = leaveRequestRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
@@ -32,7 +32,7 @@ public class GetLeaveRequestListRequestHandler : IRequestHandler<GetLeaveRequest
 
         try
         {
-            var leaveRequests = await _leaveRequestRepository.GetLeaveRequestsWithDetailsAsync();
+            var leaveRequests = await _unitOfWork.LeaveRequestRepository.GetLeaveRequestsWithDetailsAsync();
             var leaveRequestsDto = _mapper.Map<List<LeaveRequestListDto>>(leaveRequests);
 
             result = ResultResponse<List<LeaveRequestListDto>>.Success(leaveRequestsDto, $"Fetch of {nameof(LeaveRequest)} list successful");
