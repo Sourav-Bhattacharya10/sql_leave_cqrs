@@ -17,15 +17,13 @@ namespace Application.Features.LeaveRequests.Handlers.Commands;
 
 public class UpdateLeaveRequestCommandHandler : IRequestHandler<UpdateLeaveRequestCommand, ResultResponse<LeaveRequestDto>>
 {
-    private readonly ILeaveRequestRepository _leaveRequestRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly ILeaveTypeRepository _leaveTypeRepository;
 
-    public UpdateLeaveRequestCommandHandler(ILeaveRequestRepository leaveRequestRepository, IMapper mapper, ILeaveTypeRepository leaveTypeRepository)
+    public UpdateLeaveRequestCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        _leaveRequestRepository = leaveRequestRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _leaveTypeRepository = leaveTypeRepository;
     }
 
     public async Task<ResultResponse<LeaveRequestDto>> Handle(UpdateLeaveRequestCommand request, CancellationToken cancellationToken)
@@ -34,13 +32,13 @@ public class UpdateLeaveRequestCommandHandler : IRequestHandler<UpdateLeaveReque
 
         try
         {
-            var validator = new UpdateLeaveRequestDtoValidator(_leaveTypeRepository);
+            var validator = new UpdateLeaveRequestDtoValidator(_unitOfWork.LeaveTypeRepository);
             var validationResult = await validator.ValidateAsync(request.LeaveRequestDto);
 
             if(!validationResult.IsValid)
                 throw new ValidationException(validationResult);
 
-            var leaveRequest = await _leaveRequestRepository.GetAsync(request.Id);
+            var leaveRequest = await _unitOfWork.LeaveRequestRepository.GetAsync(request.Id);
 
             if(leaveRequest == null)
                 throw new NotFoundException(nameof(LeaveRequest), request.LeaveRequestDto.Id);
@@ -49,7 +47,7 @@ public class UpdateLeaveRequestCommandHandler : IRequestHandler<UpdateLeaveReque
             {
                 _mapper.Map(request.LeaveRequestDto, leaveRequest);
 
-                leaveRequest = await _leaveRequestRepository.UpdateAsync(leaveRequest);
+                leaveRequest = _unitOfWork.LeaveRequestRepository.Update(leaveRequest);
                 
                 var leaveRequestDto = _mapper.Map<LeaveRequestDto>(leaveRequest);
 
@@ -57,12 +55,14 @@ public class UpdateLeaveRequestCommandHandler : IRequestHandler<UpdateLeaveReque
             }
             else if(request.ChangeLeaveRequestApprovalDto != null)
             {
-                leaveRequest = await _leaveRequestRepository.ChangeApprovalStatusAsync(leaveRequest, request.ChangeLeaveRequestApprovalDto.Approved);
+                leaveRequest = _unitOfWork.LeaveRequestRepository.ChangeApprovalStatus(leaveRequest, request.ChangeLeaveRequestApprovalDto.Approved);
 
                 var leaveRequestDto = _mapper.Map<LeaveRequestDto>(leaveRequest);
 
                 result = ResultResponse<LeaveRequestDto>.Success(leaveRequestDto, $"Approval of {nameof(LeaveRequest)} successful");
             }
+
+            await _unitOfWork.SaveChangesAsync();
         }
         catch (ValidationException ex)
         {

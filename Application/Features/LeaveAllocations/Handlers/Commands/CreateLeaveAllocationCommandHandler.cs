@@ -17,15 +17,13 @@ namespace Application.Features.LeaveAllocations.Handlers.Commands;
 
 public class CreateLeaveAllocationCommandHandler: IRequestHandler<CreateLeaveAllocationCommand, ResultResponse<LeaveAllocationDto>>
 {
-    private readonly ILeaveAllocationRepository _leaveAllocationRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly ILeaveTypeRepository _leaveTypeRepository;
 
-    public CreateLeaveAllocationCommandHandler(ILeaveAllocationRepository leaveAllocationRepository, IMapper mapper, ILeaveTypeRepository leaveTypeRepository)
+    public CreateLeaveAllocationCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        _leaveAllocationRepository = leaveAllocationRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _leaveTypeRepository = leaveTypeRepository;
     }
 
     public async Task<ResultResponse<LeaveAllocationDto>> Handle(CreateLeaveAllocationCommand request, CancellationToken cancellationToken)
@@ -34,7 +32,7 @@ public class CreateLeaveAllocationCommandHandler: IRequestHandler<CreateLeaveAll
 
         try
         {
-            var validator = new CreateLeaveAllocationDtoValidator(_leaveTypeRepository);
+            var validator = new CreateLeaveAllocationDtoValidator(_unitOfWork.LeaveTypeRepository);
             var validationResult = await validator.ValidateAsync(request.LeaveAllocationDto);
 
             if(!validationResult.IsValid)
@@ -42,7 +40,9 @@ public class CreateLeaveAllocationCommandHandler: IRequestHandler<CreateLeaveAll
 
             var leaveAllocation = _mapper.Map<LeaveAllocation>(request.LeaveAllocationDto);
 
-            leaveAllocation = await _leaveAllocationRepository.AddAsync(leaveAllocation);
+            leaveAllocation = await _unitOfWork.LeaveAllocationRepository.AddAsync(leaveAllocation);
+
+            await _unitOfWork.SaveChangesAsync();
 
             var leaveAllocationDto = _mapper.Map<LeaveAllocationDto>(leaveAllocation);
 

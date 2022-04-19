@@ -17,12 +17,12 @@ namespace Application.Features.LeaveTypes.Handlers.Queries;
 
 public class GetLeaveTypeDetailRequestHandler : IRequestHandler<GetLeaveTypeDetailRequest, ResultResponse<LeaveTypeDto>>
 {
-    private readonly ILeaveTypeRepository _leaveTypeRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public GetLeaveTypeDetailRequestHandler(ILeaveTypeRepository leaveTypeRepository, IMapper mapper)
+    public GetLeaveTypeDetailRequestHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        _leaveTypeRepository = leaveTypeRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
@@ -32,7 +32,7 @@ public class GetLeaveTypeDetailRequestHandler : IRequestHandler<GetLeaveTypeDeta
 
         try
         {
-            var leaveType = await _leaveTypeRepository.GetAsync(request.Id);
+            var leaveType = await _unitOfWork.LeaveTypeRepository.GetAsync(request.Id);
 
             if(leaveType == null)
                 throw new NotFoundException(nameof(LeaveType), request.Id);

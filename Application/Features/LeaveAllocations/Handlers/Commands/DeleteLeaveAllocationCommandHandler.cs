@@ -16,12 +16,12 @@ namespace Application.Features.LeaveAllocations.Handlers.Commands;
 
 public class DeleteLeaveAllocationCommandHandler : IRequestHandler<DeleteLeaveAllocationCommand, ResultResponse<LeaveAllocationDto>>
 {
-    private readonly ILeaveAllocationRepository _leaveAllocationRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public DeleteLeaveAllocationCommandHandler(ILeaveAllocationRepository leaveAllocationRepository, IMapper mapper)
+    public DeleteLeaveAllocationCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        _leaveAllocationRepository = leaveAllocationRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
@@ -31,12 +31,14 @@ public class DeleteLeaveAllocationCommandHandler : IRequestHandler<DeleteLeaveAl
 
         try
         {
-            var leaveAllocation = await _leaveAllocationRepository.GetAsync(request.Id);
+            var leaveAllocation = await _unitOfWork.LeaveAllocationRepository.GetAsync(request.Id);
 
             if(leaveAllocation == null)
                 throw new NotFoundException(nameof(LeaveAllocation), request.Id);
 
-            leaveAllocation = await _leaveAllocationRepository.DeleteAsync(leaveAllocation);
+            leaveAllocation = _unitOfWork.LeaveAllocationRepository.Delete(leaveAllocation);
+
+            await _unitOfWork.SaveChangesAsync();
 
             var leaveAllocationDto = _mapper.Map<LeaveAllocationDto>(leaveAllocation);
 

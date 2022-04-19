@@ -17,12 +17,12 @@ namespace Application.Features.LeaveAllocations.Handlers.Queries;
 
 public class GetLeaveAllocationListRequestHandler : IRequestHandler<GetLeaveAllocationListRequest, ResultResponse<List<LeaveAllocationDto>>>
 {
-    private readonly ILeaveAllocationRepository _leaveAllocationRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public GetLeaveAllocationListRequestHandler(ILeaveAllocationRepository leaveAllocationRepository, IMapper mapper)
+    public GetLeaveAllocationListRequestHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        _leaveAllocationRepository = leaveAllocationRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
@@ -32,7 +32,7 @@ public class GetLeaveAllocationListRequestHandler : IRequestHandler<GetLeaveAllo
 
         try
         {
-            var leaveAllocations = await _leaveAllocationRepository.GetLeaveAllocationsWithDetailsAsync();
+            var leaveAllocations = await _unitOfWork.LeaveAllocationRepository.GetLeaveAllocationsWithDetailsAsync();
             var leaveAllocationsDto = _mapper.Map<List<LeaveAllocationDto>>(leaveAllocations);
 
             result = ResultResponse<List<LeaveAllocationDto>>.Success(leaveAllocationsDto, $"Fetch of {nameof(LeaveAllocation)} list successful");

@@ -17,12 +17,12 @@ namespace Application.Features.LeaveTypes.Handlers.Queries;
 
 public class GetLeaveTypeListRequestHandler : IRequestHandler<GetLeaveTypeListRequest, ResultResponse<List<LeaveTypeDto>>>
 {
-    private readonly ILeaveTypeRepository _leaveTypeRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public GetLeaveTypeListRequestHandler(ILeaveTypeRepository leaveTypeRepository, IMapper mapper)
+    public GetLeaveTypeListRequestHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        _leaveTypeRepository = leaveTypeRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
@@ -32,7 +32,7 @@ public class GetLeaveTypeListRequestHandler : IRequestHandler<GetLeaveTypeListRe
 
         try
         {
-            var leaveTypes = await _leaveTypeRepository.GetAllAsync();
+            var leaveTypes = await _unitOfWork.LeaveTypeRepository.GetAllAsync();
             var leaveTypesDto = _mapper.Map<List<LeaveTypeDto>>(leaveTypes);
 
             result = ResultResponse<List<LeaveTypeDto>>.Success(leaveTypesDto, $"Fetch of {nameof(LeaveType)} list successful");

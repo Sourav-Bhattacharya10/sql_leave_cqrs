@@ -16,12 +16,12 @@ namespace Application.Features.LeaveTypes.Handlers.Commands;
 
 public class DeleteLeaveTypeCommandHandler : IRequestHandler<DeleteLeaveTypeCommand, ResultResponse<LeaveTypeDto>>
 {
-    private readonly ILeaveTypeRepository _leaveTypeRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
 
-    public DeleteLeaveTypeCommandHandler(ILeaveTypeRepository leaveTypeRepository, IMapper mapper)
+    public DeleteLeaveTypeCommandHandler(IUnitOfWork unitOfWork, IMapper mapper)
     {
-        _leaveTypeRepository = leaveTypeRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
     }
 
@@ -31,12 +31,14 @@ public class DeleteLeaveTypeCommandHandler : IRequestHandler<DeleteLeaveTypeComm
 
         try
         {
-            var leaveType = await _leaveTypeRepository.GetAsync(request.Id);
+            var leaveType = await _unitOfWork.LeaveTypeRepository.GetAsync(request.Id);
 
             if(leaveType == null)
                 throw new NotFoundException(nameof(LeaveType), request.Id);
 
-            leaveType = await _leaveTypeRepository.DeleteAsync(leaveType);
+            leaveType = _unitOfWork.LeaveTypeRepository.Delete(leaveType);
+
+            await _unitOfWork.SaveChangesAsync();
 
             var leaveTypeDto = _mapper.Map<LeaveTypeDto>(leaveType);
 

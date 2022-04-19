@@ -19,16 +19,14 @@ namespace Application.Features.LeaveRequests.Handlers.Commands;
 
 public class CreateLeaveRequestCommandHandler : IRequestHandler<CreateLeaveRequestCommand, ResultResponse<LeaveRequestDto>>
 {
-    private readonly ILeaveRequestRepository _leaveRequestRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
-    private readonly ILeaveTypeRepository _leaveTypeRepository;
     // private readonly IEmailSender _emailSender;
 
-    public CreateLeaveRequestCommandHandler(ILeaveRequestRepository leaveRequestRepository, IMapper mapper, ILeaveTypeRepository leaveTypeRepository) // , IEmailSender emailSender
+    public CreateLeaveRequestCommandHandler(IUnitOfWork unitOfWork, IMapper mapper) // , IEmailSender emailSender
     {
-        _leaveRequestRepository = leaveRequestRepository;
+        _unitOfWork = unitOfWork;
         _mapper = mapper;
-        _leaveTypeRepository = leaveTypeRepository;
         // _emailSender = emailSender;
     }
 
@@ -38,7 +36,7 @@ public class CreateLeaveRequestCommandHandler : IRequestHandler<CreateLeaveReque
 
         try
         {
-            var validator = new CreateLeaveRequestDtoValidator(_leaveTypeRepository);
+            var validator = new CreateLeaveRequestDtoValidator(_unitOfWork.LeaveTypeRepository);
             var validationResult = await validator.ValidateAsync(request.LeaveRequestDto);
 
             if(!validationResult.IsValid)
@@ -46,7 +44,9 @@ public class CreateLeaveRequestCommandHandler : IRequestHandler<CreateLeaveReque
 
             var leaveRequest = _mapper.Map<LeaveRequest>(request.LeaveRequestDto);
 
-            leaveRequest = await _leaveRequestRepository.AddAsync(leaveRequest);
+            leaveRequest = await _unitOfWork.LeaveRequestRepository.AddAsync(leaveRequest);
+
+            await _unitOfWork.SaveChangesAsync();
 
             var leaveRequestDto = _mapper.Map<LeaveRequestDto>(leaveRequest);
 
