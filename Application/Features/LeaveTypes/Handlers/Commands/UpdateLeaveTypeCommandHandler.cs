@@ -11,6 +11,7 @@ using Application.Features.LeaveTypes.Requests.Commands;
 using Application.Exceptions;
 using Application.Responses;
 using Persistence.Contracts;
+using Application.Enums;
 
 namespace Application.Features.LeaveTypes.Handlers.Commands;
 
@@ -48,15 +49,19 @@ public class UpdateLeaveTypeCommandHandler : IRequestHandler<UpdateLeaveTypeComm
 
             var leaveTypeDto = _mapper.Map<LeaveTypeDto>(leaveType);
 
-            result = ResultResponse<LeaveTypeDto>.Success(leaveTypeDto, $"Updation of {nameof(LeaveType)} is successful");
+            result = ResultResponse<LeaveTypeDto>.Success(leaveTypeDto, $"Updation of {nameof(LeaveType)} successful");
         }
         catch (ValidationException ex)
         {
-            result = ResultResponse<LeaveTypeDto>.Failure(ex.Errors, $"Updation of {nameof(LeaveType)} is failed");
+            result = ResultResponse<LeaveTypeDto>.Failure(ex.Errors, $"Validation of {nameof(LeaveType)} updation failed", ErrorType.Validation);
+        }
+        catch (NotFoundException ex)
+        {
+            result = ResultResponse<LeaveTypeDto>.Failure(new List<string>() {ex.Message}, $"Updation of {nameof(LeaveType)} failed as the record was not found", ErrorType.NotFound);
         }
         catch (Exception ex)
         {
-            result = ResultResponse<LeaveTypeDto>.Failure(new List<string>() {ex.Message}, $"Updation of {nameof(LeaveType)} is failed");
+            result = ResultResponse<LeaveTypeDto>.Failure(new List<string>() {ex.Message}, $"Updation of {nameof(LeaveType)} is failed", ErrorType.Database, ex);
         }
 
         return result;

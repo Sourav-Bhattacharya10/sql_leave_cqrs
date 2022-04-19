@@ -3,6 +3,7 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.SqlClient;
 
 using Persistence.Contracts;
 using Persistence.Repositories;
@@ -15,7 +16,14 @@ public static class PersistenceServicesRegistration
     {
         services.AddDbContext<LeaveManagementDbContext>(options => 
         {
-            options.UseSqlServer(configuration.GetConnectionString("LeaveManagementConnectionString"));
+            var connectionString = configuration.GetValue<string>("SqlServer2017ConnectionString");
+            var userID = configuration.GetValue<string>("SqlServer2017UserID");
+            var dbPassword = configuration.GetValue<string>("SqlServer2017Password");
+
+            var builder = new SqlConnectionStringBuilder(connectionString);
+            builder.UserID = userID;
+            builder.Password = dbPassword; // dotnet user-secrets set "DbPassword" "***value***"
+            options.UseSqlServer(builder.ConnectionString);
         });
 
         services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));

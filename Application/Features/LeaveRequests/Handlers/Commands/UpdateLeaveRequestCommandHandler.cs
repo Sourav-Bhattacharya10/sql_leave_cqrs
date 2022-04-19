@@ -11,6 +11,7 @@ using Application.Features.LeaveRequests.Requests.Commands;
 using Application.Exceptions;
 using Application.Responses;
 using Persistence.Contracts;
+using Application.Enums;
 
 namespace Application.Features.LeaveRequests.Handlers.Commands;
 
@@ -52,7 +53,7 @@ public class UpdateLeaveRequestCommandHandler : IRequestHandler<UpdateLeaveReque
                 
                 var leaveRequestDto = _mapper.Map<LeaveRequestDto>(leaveRequest);
 
-                result = ResultResponse<LeaveRequestDto>.Success(leaveRequestDto, $"Updation of {nameof(LeaveRequest)} is successful");
+                result = ResultResponse<LeaveRequestDto>.Success(leaveRequestDto, $"Updation of {nameof(LeaveRequest)} successful");
             }
             else if(request.ChangeLeaveRequestApprovalDto != null)
             {
@@ -60,16 +61,20 @@ public class UpdateLeaveRequestCommandHandler : IRequestHandler<UpdateLeaveReque
 
                 var leaveRequestDto = _mapper.Map<LeaveRequestDto>(leaveRequest);
 
-                result = ResultResponse<LeaveRequestDto>.Success(leaveRequestDto, $"Approval of {nameof(LeaveRequest)} is successful");
+                result = ResultResponse<LeaveRequestDto>.Success(leaveRequestDto, $"Approval of {nameof(LeaveRequest)} successful");
             }
         }
         catch (ValidationException ex)
         {
-            result = ResultResponse<LeaveRequestDto>.Failure(ex.Errors, $"Updation of {nameof(LeaveRequest)} is failed");
+            result = ResultResponse<LeaveRequestDto>.Failure(ex.Errors, $"Validation of {nameof(LeaveRequest)} updation failed", ErrorType.Validation);
+        }
+        catch (NotFoundException ex)
+        {
+            result = ResultResponse<LeaveRequestDto>.Failure(new List<string>(){ ex.Message }, $"Updation of {nameof(LeaveRequest)} failed as the record was not found", ErrorType.NotFound);
         }
         catch (Exception ex)
         {
-            result = ResultResponse<LeaveRequestDto>.Failure(new List<string>(){ ex.Message }, $"Updation of {nameof(LeaveRequest)} is failed");
+            result = ResultResponse<LeaveRequestDto>.Failure(new List<string>(){ ex.Message }, $"Updation of {nameof(LeaveRequest)} failed", ErrorType.Database, ex);
         }
 
         return result;

@@ -16,6 +16,6 @@ public class ILeaveTypeDtoValidator : AbstractValidator<ILeaveTypeDto>
         RuleFor(p => p.DefaultDays)
             .NotEmpty().WithMessage("{PropertyName} is required")
             .GreaterThan(0).WithMessage("{PropertyName} must be at least 1")
-            .LessThan(100).WithMessage("{PropertyName} must be less than {ComparisonValue}");
+            .LessThan(731).WithMessage("{PropertyName} must be less than {ComparisonValue}");
     }
 }

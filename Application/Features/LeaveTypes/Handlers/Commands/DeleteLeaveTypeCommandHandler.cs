@@ -10,6 +10,7 @@ using Application.Features.LeaveTypes.Requests.Commands;
 using Application.Exceptions;
 using Application.Responses;
 using Persistence.Contracts;
+using Application.Enums;
 
 namespace Application.Features.LeaveTypes.Handlers.Commands;
 
@@ -39,11 +40,15 @@ public class DeleteLeaveTypeCommandHandler : IRequestHandler<DeleteLeaveTypeComm
 
             var leaveTypeDto = _mapper.Map<LeaveTypeDto>(leaveType);
 
-            result = ResultResponse<LeaveTypeDto>.Success(leaveTypeDto, $"Deletion of {nameof(LeaveType)} is successful");
+            result = ResultResponse<LeaveTypeDto>.Success(leaveTypeDto, $"Deletion of {nameof(LeaveType)} successful");
+        }
+        catch (NotFoundException ex)
+        {
+            result = ResultResponse<LeaveTypeDto>.Failure(new List<string>(){ ex.Message }, $"Deletion of {nameof(LeaveType)} failed as the record was not found", ErrorType.NotFound);
         }
         catch (Exception ex)
         {
-            result = ResultResponse<LeaveTypeDto>.Failure(new List<string>(){ ex.Message }, $"Deletion of {nameof(LeaveType)} is failed");
+            result = ResultResponse<LeaveTypeDto>.Failure(new List<string>(){ ex.Message }, $"Deletion of {nameof(LeaveType)} failed", ErrorType.Database, ex);
         }
 
         return result;
