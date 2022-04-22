@@ -11,14 +11,14 @@ using Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
                             
-if (builder.Environment.IsDevelopment())
-{
+// if (builder.Environment.IsDevelopment())
+// {
     string keyVaultName = builder.Configuration["KeyVaultName"];
     keyVaultName = keyVaultName.ToLower();
     var kvUri = "https://" + keyVaultName + ".vault.azure.net";
-    var secretClient = new SecretClient(new Uri(kvUri), new DefaultAzureCredential(includeInteractiveCredentials: true));
+    var secretClient = new SecretClient(new Uri(kvUri), new DefaultAzureCredential()); // new DefaultAzureCredential(includeInteractiveCredentials: true)
     builder.Configuration.AddAzureKeyVault(secretClient, new KeyVaultSecretManager());
-}
+// }
 
 IConfiguration configuration = builder.Configuration;
 
